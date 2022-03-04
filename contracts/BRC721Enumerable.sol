@@ -21,32 +21,16 @@ abstract contract BRC721Enumerable is BRC721, IERC721Enumerable {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(IERC165, BRC721)
-        returns (bool)
-    {
-        return
-            interfaceId == type(IERC721Enumerable).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, BRC721) returns (bool) {
+        return interfaceId == type(IERC721Enumerable).interfaceId
+        || super.supportsInterface(interfaceId);
     }
 
     /**
      * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            index < BRC721.balanceOf(owner),
-            "ERC721Enumerable: owner index out of bounds"
-        );
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
+        require(index < BRC721.balanceOf(owner), "ERC721Enumerable: owner index out of bounds");
         return _ownedTokens[owner][index];
     }
 
@@ -60,17 +44,8 @@ abstract contract BRC721Enumerable is BRC721, IERC721Enumerable {
     /**
      * @dev See {IERC721Enumerable-tokenByIndex}.
      */
-    function tokenByIndex(uint256 index)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        require(
-            index < BRC721Enumerable.totalSupply(),
-            "ERC721Enumerable: global index out of bounds"
-        );
+    function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
+        require(index < BRC721Enumerable.totalSupply(), "ERC721Enumerable: global index out of bounds");
         return _allTokens[index];
     }
 
@@ -89,11 +64,7 @@ abstract contract BRC721Enumerable is BRC721, IERC721Enumerable {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal virtual override {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         super._beforeTokenTransfer(from, to, tokenId);
 
         if (from == address(0)) {
@@ -136,9 +107,7 @@ abstract contract BRC721Enumerable is BRC721, IERC721Enumerable {
      * @param from address representing the previous owner of the given token ID
      * @param tokenId uint256 ID of the token to be removed from the tokens list of the given address
      */
-    function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId)
-        private
-    {
+    function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
         // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
 

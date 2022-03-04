@@ -43,7 +43,10 @@ contract ECIONFTMigrateBNB is Ownable {
     uint256 public totalFee = 0.005 ether;
 
     // *************** Event ***************** //
-    event returnTokenURI(string[] uri);
+    event returnTokenURI(address user, string[] uri);
+
+    // *************** Mapping ***************** //
+    mapping(address => mapping(uint32 => uint256)) private _userToken;
 
     // *************** View Function ***************** //
 
@@ -58,21 +61,25 @@ contract ECIONFTMigrateBNB is Ownable {
     }
  
     // return tokenURI for backEnd;
-    function validateUserToken(address userAddr, uint256 tokenId) public {
-        uint256 userToken;
-        uint256 userBalance = BNBECIO.balanceOf(userAddr); //number of total token
+    function claimAll() public payable {
+        
+        uint256 userBalance = BNBECIO.balanceOf(msg.sender); //number of total token
         string[] memory tokenURI;
 
+        require(userBalance > 0, "Token: you do not have tokens");
+
+        // charge more fee
+        (bool sent, bytes memory data) = address(this).call{value: totalFee}(
+            ""
+        );
+        require(sent, "Failed to send Ether");
+
         for (uint32 i = 0; i < userBalance; i++) {
-            userToken = BNBECIO.tokenOfOwnerByIndex(userAddr, i);
-            if (tokenId == userToken) {
-                tokenURI[i] = getTokenURI(userToken);
-            } else {
-                tokenURI[i] = "";
-            }
+            _userToken[msg.sender][i] = BNBECIO.tokenOfOwnerByIndex(msg.sender, i);
+            tokenURI[i] = getTokenURI(_userToken[msg.sender][i]);
         }
 
-        emit returnTokenURI(tokenURI);
+        emit returnTokenURI(msg.sender, tokenURI);
     }
 
     //check TokenURI for backEnd
@@ -84,17 +91,11 @@ contract ECIONFTMigrateBNB is Ownable {
 
     function mirgrate(uint256[] memory tokenId, string[] memory partCode)
         external
-        payable
     {
         require(
             tokenId.length == partCode.length,
             "TokenId: Should have the same length"
         );
-        // charge more fee
-        (bool sent, bytes memory data) = address(this).call{value: totalFee}(
-            ""
-        );
-        require(sent, "Failed to send Ether");
 
         for (uint32 i = 0; i < tokenId.length; i++) {
             //transfer token from BNBContract to this address.
