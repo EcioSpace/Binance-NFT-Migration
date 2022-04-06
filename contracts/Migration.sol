@@ -27,6 +27,8 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
     address public BNBAddress;
     address private _minter;
 
+    mapping(address => mapping(uint256 => bool)) private userTokenIdClaim;
+
     uint256 public totalFee = 0.005 ether;
 
     // *************** Event ***************** //
@@ -47,14 +49,14 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
 
     // *************** View Function ***************** //
 
-    function getUserTokenId(address user, uint256 tokenId)
+    function getUserTokenId(address user, uint256 index)
         public
         view
         returns (uint256)
     {
         uint256 userTokenId = IERC721Enumerable(BNBAddress).tokenOfOwnerByIndex(
             user,
-            tokenId
+            index
         );
         return userTokenId;
     }
@@ -69,17 +71,15 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
         return IERC721Metadata(BNBAddress).tokenURI(tokenId);
     }
 
-    // *************** Action Function ***************** //
-
-    // return tokenURI for backEnd;
-    function claimAll() external payable nonReentrant {
+    // fetch All User's Tokens
+    function getUserAllTokens()
+        public
+        view
+        returns (uint256[] memory tokenIds, string[] memory tokenURIs)
+    {
         uint256 userBalance = checkUserBalance(msg.sender); //number of total token
         uint256[] memory tokenId = new uint256[](userBalance);
         string[] memory tokenURI = new string[](userBalance);
-
-        require(userBalance > 0, "Token: you do not have tokens");
-        // Charges fee for mintin'
-        require(msg.value >= totalFee, "Fee: you have not enough Ether");
 
         for (uint32 i = 0; i < userBalance; i++) {
             // string tokenURIcur =
@@ -88,6 +88,18 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
             tokenURI[i] = getTokenURI(tokenId[i]); // // works if no transfer
         }
 
+        return (tokenId, tokenURI);
+    }
+
+    // *************** Action Function ***************** //
+
+    // return tokenURI for backEnd;
+    function claim(uint256[] memory tokenId) external payable nonReentrant {
+        
+        require(msg.value >= totalFee,"Eth: your eth is not enough to mint");
+
+        string[] memory tokenURI = new string[](tokenId.length);
+
         for (uint32 i = 0; i < tokenId.length; i++) {
             //transfer token from Owner to this address.
             IERC721(BNBAddress).safeTransferFrom(
@@ -95,6 +107,8 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
                 address(this),
                 tokenId[i]
             );
+
+            tokenURI[i] = getTokenURI(tokenId[i]);
         }
 
         // send fee to minter
@@ -106,18 +120,28 @@ contract ECIONFTMigrateBNB is Ownable, ERC721Holder, ReentrancyGuard {
     }
 
     // mint token NFTV2 for user.
-    function mirgrate(address user, string[] memory partCode)
-        external
-        onlyOwner
-        nonReentrant
-    {
+    function mirgrate(
+        address user,
+        string[] memory partCode,
+        uint256[] memory tokenId
+    ) external onlyOwner {
+        require(
+            partCode.length == tokenId.length,
+            "TokenId: TokenId and Partcode amount must be equal."
+        );
+
         for (uint32 i = 0; i < partCode.length; i++) {
-            ECIOERC721(NFTCoreV2).safeMint(user, partCode[i]);
+            if (userTokenIdClaim[user][tokenId[i]] == false) {
+                ECIOERC721(NFTCoreV2).safeMint(user, partCode[i]);
+                userTokenIdClaim[user][tokenId[i]] = true;
+            } else {
+                revert();
+            }
         }
     }
 
     //
-    function sendEth(address payable _to, uint _amount) external onlyOwner {
+    function sendEth(address payable _to, uint256 _amount) external onlyOwner {
         (bool sent, ) = _to.call{value: _amount}("");
         require(sent, "Failed to send Ether");
     }

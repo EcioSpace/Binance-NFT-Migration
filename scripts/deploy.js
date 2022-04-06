@@ -12,7 +12,7 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
-  const names = ["BNBECIO", "ECIONFTMigrateBNB", "ECIONFTCore"];
+  const names = ["ECIONFTMigrateBNB"];
 
   for (var i=0; i < names.length; i++) {
     // We get the contract to deploy

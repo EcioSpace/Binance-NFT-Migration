@@ -21,13 +21,13 @@ require("@nomiclabs/hardhat-etherscan");
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "testnet",
+  defaultNetwork: "bscTestnet",
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
     },
     hardhat: {},
-    testnet: {
+    bscTestnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545",
       chainId: 97,
       gasPrice: 20000000000,
@@ -50,15 +50,7 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: {
-      mainnet: etherscanApiKey,
-      ropsten: etherscanApiKey,
-      rinkeby: etherscanApiKey,
-      kovan: etherscanApiKey,
-      // binance smart chain
-      bsc: bscscanApiKey,
-      bscTestnet: bscscanApiKey,
-    },
+    apiKey: bscscanApiKey
   },
   solidity: {
     version: "0.8.7",
